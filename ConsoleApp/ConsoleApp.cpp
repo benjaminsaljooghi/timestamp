@@ -13,25 +13,36 @@
 #include <sstream>
 #include <fstream>
 
+int expires_after = 10; // seconds
+auto sleep_for = std::chrono::seconds(2);
+
+
+void configure()
+{
+    bool success = WriteTimestamp();
+    if (!success) exit(1);
+    std::cout << "software configured to expire after " << expires_after << " seconds." << std::endl;
+}
+
+void sleep()
+{
+    std::cout << "sleeping for " << sleep_for.count() << " seconds" << std::endl;
+    std::this_thread::sleep_for(sleep_for);
+}
+
+void check()
+{
+    bool valid = CheckTimestamp(expires_after);
+    if (!valid)  exit(1);
+}
 
 int main()
 {
-    int expires_after = 2; // seconds
-    auto sleep_for = std::chrono::seconds(5);
+    configure();
 
+    sleep();
 
-    std::cout << "Hello World!\n" << std::endl;
-    WriteTimestamp();
-
-    std::cout << "software configured to expire after " << expires_after << " seconds." << std::endl;
-
-
-    std::cout << "sleeping for " << sleep_for.count() << " seconds" << std::endl;
-    std::this_thread::sleep_for(sleep_for);
-    bool valid = CheckTimestamp(expires_after);
-
-    std::string expiry_status = valid ? "NOT EXPIRED" : "EXPIRED";
-    std::cout << "the software has: " << expiry_status << std::endl;
+    check();
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

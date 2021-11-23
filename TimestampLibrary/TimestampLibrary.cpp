@@ -51,7 +51,7 @@ std::string GenerateCurrentTimestamp()
     return plain;
 }
 
-
+std::string timestamp_file = "T:\\timestamp.txt";
 AutoSeededRandomPool prng;
 SecByteBlock key(AES::DEFAULT_KEYLENGTH);
 SecByteBlock iv(AES::BLOCKSIZE);
@@ -97,16 +97,21 @@ uint64_t ReadTimestamp()
         std::istringstream iss(recovered);
         iss >> finalValue;
         return finalValue;
-        //return 0;
     }
     catch (const Exception& e)
     {
         std::cerr << e.what() << std::endl;
-        exit(1);
+        return 0;
+        //exit(1);
     }
 }
 
-__declspec(dllexport) void WriteTimestamp()
+inline bool exists_test0(const std::string& name) {
+    std::ifstream f(name.c_str());
+    return f.good();
+}
+
+__declspec(dllexport) BOOL WriteTimestamp()
 {
     HexEncoder encoder(new FileSink(std::cout));
     
@@ -144,32 +149,53 @@ __declspec(dllexport) void WriteTimestamp()
     //encoder.MessageEnd();
     //std::cout << std::endl;
 
+
+    if (exists_test0(timestamp_file)) {
+        std::cout << "file exists!" << std::endl;
+        return false;
+    }
+
     std::ofstream myfile;
-    std::remove("T:\\example.txt");
+    //std::remove(timestamp_file);
 
     //std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
-    myfile.open("T:\\example.txt");
+
+    myfile.open(timestamp_file);
 
     std::cout << "cipher text written to file..." << std::endl;
     myfile << cipher;
 
     myfile.close();
+
+    return true;
 }
 
 __declspec(dllexport) BOOL CheckTimestamp(uint64_t expires_after)
 {
     std::cout << "checking file..." << std::endl;
 
+    if (!exists_test0(timestamp_file)) {
+        std::cout << "file does not exist so I couldn't check the timestamp" << std::endl;
+        return false;
+    }
 
     uint64_t current = timeSinceEpochMillisec();
     uint64_t timestamp = ReadTimestamp();
+    if (timestamp == 0)
+    {
+        std::cout << "timestamp was tampered with!!!" << std::endl;
+        return false;
+    }
+
     uint64_t diff = (current - timestamp) / 1e3;
         
     std::cout << diff << " seconds have passed!" << std::endl;
+    bool expired = expires_after < diff;
 
+    std::string expiry_status = expired ? "EXPIRED" : "NOT EXPIRED";
+    std::cout << "the software has: " << expiry_status << std::endl;
 
-    bool valid = expires_after < diff;
-    return valid;
+    return !expired;
 }
 

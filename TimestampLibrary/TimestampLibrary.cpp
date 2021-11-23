@@ -56,7 +56,7 @@ SecByteBlock key(AES::DEFAULT_KEYLENGTH);
 SecByteBlock iv(AES::BLOCKSIZE);
 
 
-void ReadTimestamp()
+uint64_t ReadTimestamp()
 {
 
     std::string line;
@@ -91,6 +91,12 @@ void ReadTimestamp()
         );
 
         std::cout << "recovered text: " << recovered << std::endl;
+
+        uint64_t finalValue;
+        std::istringstream iss(recovered);
+        iss >> finalValue;
+        return finalValue;
+        //return 0;
     }
     catch (const Exception& e)
     {
@@ -140,11 +146,7 @@ __declspec(dllexport) void WriteTimestamp()
     std::ofstream myfile;
     myfile.open("T:\\example.txt");
 
-    //HexEncoder fileEncoder(new FileSink(myfile));
-
     std::cout << "cipher text written to file..." << std::endl;
-    //fileEncoder.Put((const byte*)&cipher[0], cipher.size());
-    //fileEncoder.MessageEnd();
     myfile << cipher;
 
     myfile.close();
@@ -152,7 +154,9 @@ __declspec(dllexport) void WriteTimestamp()
 
 __declspec(dllexport) BOOL CheckTimestamp()
 {
-    ReadTimestamp();
+    uint64_t timestamp = ReadTimestamp();
+    std::cout << "final: " << std::endl;
+    std::cout << timestamp << std::endl;
     return false;
 }
 

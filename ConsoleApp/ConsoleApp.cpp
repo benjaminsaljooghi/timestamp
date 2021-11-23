@@ -7,6 +7,8 @@
 int main()
 {
     std::cout << "Hello World!\n" << std::endl;
+    //std::cout << CheckTimestamp() << std::endl;
+    WriteTimestamp();
     std::cout << CheckTimestamp() << std::endl;
 }
 

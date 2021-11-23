@@ -7,6 +7,7 @@
 #include "../cryptopp/files.h"
 #include "../cryptopp/osrng.h"
 #include "../cryptopp/hex.h"
+#include "../cryptopp/eax.h"
 
 #include <iostream>
 #include <chrono>
@@ -14,6 +15,8 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+
+using namespace CryptoPP;
 
 
 BOOL APIENTRY DllMain( HMODULE hModule,
@@ -37,12 +40,28 @@ uint64_t timeSinceEpochMillisec() {
     return duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
 }
 
+std::string GenerateCurrentTimestamp()
+{
+    uint64_t time = timeSinceEpochMillisec();
+    std::ostringstream oss;
+    uint64_t i = time;
+    oss << i;
+    std::string plain(oss.str());
+    return plain;
+}
+
+
+AutoSeededRandomPool prng;
+SecByteBlock key(AES::DEFAULT_KEYLENGTH);
+SecByteBlock iv(AES::BLOCKSIZE);
+
+
 void ReadTimestamp()
 {
-    using namespace CryptoPP;
 
     std::string line;
     std::ifstream myfile("T:\\example.txt");
+    std::cout << "reading raw cipher from file..." << std::endl;
     if (myfile.is_open())
     {
         while (getline(myfile, line))
@@ -53,76 +72,60 @@ void ReadTimestamp()
     }
     else std::cout << "Unable to open file";
 
+    std::string cipher = line;
 
-    /*********************************\
-    \*********************************/
+    // attack the first and last bytes
+    //cipher[ 0 ] ^= 0x01;
+    //cipher[ cipher.size()-1 ] ^= 0x01;
 
-    //try
-    //{
-    //    CBC_Mode< AES >::Decryption d;
-    //    d.SetKeyWithIV(key, key.size(), iv);
-
-    //    StringSource s(cipher, true,
-    //        new StreamTransformationFilter(d,
-    //            new StringSink(recovered)
-    //        ) // StreamTransformationFilter
-    //    ); // StringSource
-
-    //    std::cout << "recovered text: " << recovered << std::endl;
-    //}
-    //catch (const Exception& e)
-    //{
-    //    std::cerr << e.what() << std::endl;
-    //    exit(1);
-    //}
-}
-
-__declspec(dllexport) void WriteTimestamp()
-{
-    uint64_t time = timeSinceEpochMillisec();
-    std::ostringstream oss;
-    uint64_t i = time;
-    oss << i;
-    std::string plain(oss.str());
-
-    using namespace CryptoPP;
-
-    AutoSeededRandomPool prng;
-    HexEncoder encoder(new FileSink(std::cout));
-
-    SecByteBlock key(AES::DEFAULT_KEYLENGTH);
-    SecByteBlock iv(AES::BLOCKSIZE);
-
-    prng.GenerateBlock(key, key.size());
-    prng.GenerateBlock(iv, iv.size());
-
-    //std::string plain = "CBC Mode Test";
-    std::string cipher, recovered;
-
-    std::cout << "plain text: " << plain << std::endl;
-
-    /*********************************\
-    \*********************************/
-
+    std::string recovered;
     try
     {
-        CBC_Mode< AES >::Encryption e;
-        e.SetKeyWithIV(key, key.size(), iv);
+        EAX< AES >::Decryption d;
+        d.SetKeyWithIV(key, key.size(), iv);
 
-        StringSource s(plain, true,
-            new StreamTransformationFilter(e,
-                new StringSink(cipher)
+        StringSource s(cipher, true,
+            new AuthenticatedDecryptionFilter(d,
+                new StringSink(recovered)
             ) // StreamTransformationFilter
-        ); // StringSource
+        );
+
+        std::cout << "recovered text: " << recovered << std::endl;
     }
     catch (const Exception& e)
     {
         std::cerr << e.what() << std::endl;
         exit(1);
     }
+}
 
-    /*********************************\
-    \*********************************/
+__declspec(dllexport) void WriteTimestamp()
+{
+    HexEncoder encoder(new FileSink(std::cout));
+    
+    std::string plain = GenerateCurrentTimestamp();
+    std::string cipher;
+
+    std::cout << "plain text: " << plain << std::endl;
+
+    prng.GenerateBlock(key, key.size());
+    prng.GenerateBlock(iv, iv.size());
+    try
+    {
+        EAX< AES >::Encryption e;
+        e.SetKeyWithIV(key, key.size(), iv);
+
+        StringSource s(plain, true,
+            new AuthenticatedEncryptionFilter(e,
+                new StringSink(cipher)
+            ) // StreamTransformationFilter
+        );
+    }
+    catch (const Exception& e)
+    {
+        std::cerr << e.what() << std::endl;
+        exit(1);
+    }
 
     std::cout << "key: ";
     encoder.Put(key, key.size());
@@ -134,21 +137,17 @@ __declspec(dllexport) void WriteTimestamp()
     encoder.MessageEnd();
     std::cout << std::endl;
 
-
     std::ofstream myfile;
     myfile.open("T:\\example.txt");
-    //myfile << cipher;
 
-    HexEncoder fileEncoder(new FileSink(myfile));
+    //HexEncoder fileEncoder(new FileSink(myfile));
 
     std::cout << "cipher text written to file..." << std::endl;
-    fileEncoder.Put((const byte*)&cipher[0], cipher.size());
-    fileEncoder.MessageEnd();
-    //std::cout << std::endl;
+    //fileEncoder.Put((const byte*)&cipher[0], cipher.size());
+    //fileEncoder.MessageEnd();
+    myfile << cipher;
 
     myfile.close();
-
-
 }
 
 __declspec(dllexport) BOOL CheckTimestamp()

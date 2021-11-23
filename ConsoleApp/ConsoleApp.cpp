@@ -4,11 +4,16 @@
 #include <iostream>
 #include "../TimestampLibrary/TimestampLibrary.h"
 
+
+
 int main()
 {
     std::cout << "Hello World!\n" << std::endl;
     //std::cout << CheckTimestamp() << std::endl;
     WriteTimestamp();
+
+    //getchar();
+    
     std::cout << CheckTimestamp() << std::endl;
 }
 

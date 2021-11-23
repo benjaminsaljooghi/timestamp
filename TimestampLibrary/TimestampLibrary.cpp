@@ -9,6 +9,7 @@
 #include "../cryptopp/hex.h"
 #include "../cryptopp/eax.h"
 
+#include <thread>
 #include <iostream>
 #include <chrono>
 #include <ctime>
@@ -66,7 +67,7 @@ uint64_t ReadTimestamp()
     {
         while (getline(myfile, line))
         {
-            std::cout << line << '\n';
+            //std::cout << line << '\n';
         }
         myfile.close();
     }
@@ -112,7 +113,7 @@ __declspec(dllexport) void WriteTimestamp()
     std::string plain = GenerateCurrentTimestamp();
     std::string cipher;
 
-    std::cout << "plain text: " << plain << std::endl;
+    std::cout << "writing timestamp to file: " << plain << std::endl;
 
     prng.GenerateBlock(key, key.size());
     prng.GenerateBlock(iv, iv.size());
@@ -133,17 +134,21 @@ __declspec(dllexport) void WriteTimestamp()
         exit(1);
     }
 
-    std::cout << "key: ";
-    encoder.Put(key, key.size());
-    encoder.MessageEnd();
-    std::cout << std::endl;
+    //std::cout << "key: ";
+    //encoder.Put(key, key.size());
+    //encoder.MessageEnd();
+    //std::cout << std::endl;
 
-    std::cout << "iv: ";
-    encoder.Put(iv, iv.size());
-    encoder.MessageEnd();
-    std::cout << std::endl;
+    //std::cout << "iv: ";
+    //encoder.Put(iv, iv.size());
+    //encoder.MessageEnd();
+    //std::cout << std::endl;
 
     std::ofstream myfile;
+    std::remove("T:\\example.txt");
+
+    //std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
     myfile.open("T:\\example.txt");
 
     std::cout << "cipher text written to file..." << std::endl;
@@ -152,11 +157,19 @@ __declspec(dllexport) void WriteTimestamp()
     myfile.close();
 }
 
-__declspec(dllexport) BOOL CheckTimestamp()
+__declspec(dllexport) BOOL CheckTimestamp(uint64_t expires_after)
 {
+    std::cout << "checking file..." << std::endl;
+
+
+    uint64_t current = timeSinceEpochMillisec();
     uint64_t timestamp = ReadTimestamp();
-    std::cout << "final: " << std::endl;
-    std::cout << timestamp << std::endl;
-    return false;
+    uint64_t diff = (current - timestamp) / 1e3;
+        
+    std::cout << diff << " seconds have passed!" << std::endl;
+
+
+    bool valid = expires_after < diff;
+    return valid;
 }
 

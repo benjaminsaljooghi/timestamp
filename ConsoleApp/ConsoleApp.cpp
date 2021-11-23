@@ -5,16 +5,33 @@
 #include "../TimestampLibrary/TimestampLibrary.h"
 
 
+#include <thread>
+#include <iostream>
+#include <chrono>
+#include <ctime>
+#include <string>
+#include <sstream>
+#include <fstream>
+
 
 int main()
 {
+    int expires_after = 2; // seconds
+    auto sleep_for = std::chrono::seconds(5);
+
+
     std::cout << "Hello World!\n" << std::endl;
-    //std::cout << CheckTimestamp() << std::endl;
     WriteTimestamp();
 
-    //getchar();
-    
-    std::cout << CheckTimestamp() << std::endl;
+    std::cout << "software configured to expire after " << expires_after << " seconds." << std::endl;
+
+
+    std::cout << "sleeping for " << sleep_for.count() << " seconds" << std::endl;
+    std::this_thread::sleep_for(sleep_for);
+    bool valid = CheckTimestamp(expires_after);
+
+    std::string expiry_status = valid ? "NOT EXPIRED" : "EXPIRED";
+    std::cout << "the software has: " << expiry_status << std::endl;
 }
 
 // Run program: Ctrl + F5 or Debug > Start Without Debugging menu

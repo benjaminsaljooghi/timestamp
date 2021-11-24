@@ -67,7 +67,11 @@ uint64_t Timestamp::read_timestamp(std::string timestamp_path)
         getline(myfile, line);
         myfile.close();
     }
-    else std::cout << "Unable to open file";
+    else
+    {
+        std::cout << "Unable to open file";
+        return 0;
+    }
 
     std::string cipher;
 
@@ -75,8 +79,8 @@ uint64_t Timestamp::read_timestamp(std::string timestamp_path)
     decoder.Put((const byte*)&line[0], line.size());
     decoder.MessageEnd();
 
-    // attack the first byte
-    //cipher[ 0 ] ^= 0x01;
+    // EXPERIMENT: attack the first byte
+    // cipher[ 0 ] ^= 0x01;
 
     std::string recovered;
     try

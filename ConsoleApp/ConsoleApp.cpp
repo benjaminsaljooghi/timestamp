@@ -13,14 +13,14 @@
 #include <fstream>
 
 std::string timestamp_path = "T:\\timestamp.txt";
-auto expires_after = std::chrono::seconds(10);
+auto expires_after = 10; // seconds
 auto sleep_for = std::chrono::seconds(2);
 
-void configure()
+void install()
 {
     bool success = Timestamp::write_timestamp(timestamp_path);
     if (!success) exit(1);
-    std::cout << "software configured to expire after " << expires_after.count() << " seconds." << std::endl;
+    std::cout << "software configured to expire after " << expires_after << " seconds." << std::endl;
 }
 
 void sleep()
@@ -31,13 +31,13 @@ void sleep()
 
 void check()
 {
-    bool valid = Timestamp::check_expiry(expires_after);
+    bool valid = Timestamp::check_expiry(timestamp_path, expires_after);
     if (!valid)  exit(1);
 }
 
 int main()
 {
-    configure();
+    install();
 
     sleep();
 

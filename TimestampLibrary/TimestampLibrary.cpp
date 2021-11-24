@@ -153,7 +153,7 @@ __declspec(dllexport) bool Timestamp::write_timestamp(std::string timestamp_path
     return true;
 }
 
-__declspec(dllexport) bool Timestamp::check_expiry(std::string timestamp_path, std::chrono::seconds expires_after)
+__declspec(dllexport) bool Timestamp::check_expiry(std::string timestamp_path, uint64_t expires_after)
 {
     std::cout << "checking file..." << std::endl;
 

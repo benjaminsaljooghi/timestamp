@@ -2,7 +2,7 @@
 //
 
 #include <iostream>
-#include "../TimeStampLibrary/timestamp.h"
+#include "../TimestampLibrary/TimestampLibrary.h"
 
 #include <thread>
 #include <iostream>
@@ -31,7 +31,7 @@ void sleep()
 
 void check()
 {
-    bool valid = Timestamp::check_expiry(timestamp_path, expires_after);
+    bool valid = Timestamp::check_expiry(expires_after);
     if (!valid)  exit(1);
 }
 

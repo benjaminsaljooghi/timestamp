@@ -13,7 +13,7 @@ Instructions:
     - `expires_after`
     - `sleep_for`
 - Compile & run `ConsoleApp`
-- Adjusting the configuration parameters as needed, run the follow experiments:
+- Adjusting the configuration parameters as needed, run the following experiments:
     - Timestamp file already exists.
     - Console app sleeps for longer than expiry.
     - Console app sleeps for shorter than expiry.
